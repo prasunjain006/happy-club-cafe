@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Club Café – Order Online</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#F97316',
+              yellow: '#FACC15',
+              dark:   '#111827',
+              card:   '#1F2937',
+              border: '#374151',
+              muted:  '#9CA3AF',
+            }
+          },
+          fontFamily: {
+            display: ['"Bebas Neue"', 'cursive'],
+            body:    ['"Nunito"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ── Global ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: #111827;
+      color: #F9FAFB;
+      padding-bottom: 100px; /* room for sticky bar */
+    }
+
+    /* ── Scrollbar ───────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #1F2937; }
+    ::-webkit-scrollbar-thumb { background: #F97316; border-radius: 3px; }
+
+    /* ── Category Pills (horizontal scroll) ─── */
+    .pill-scroll::-webkit-scrollbar { display: none; }
+    .pill-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ── Card hover ──────────────────────────── */
+    .menu-card {
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .menu-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(249,115,22,.25);
+    }
+
+    /* ── Add button pulse ────────────────────── */
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(.88); }
+      70%  { transform: scale(1.14); }
+      100% { transform: scale(1); }
+    }
+    .btn-pop { animation: pop .28s ease forwards; }
+
+    /* ── Cart bar slide-in ───────────────────── */
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    #cart-bar.visible { animation: slideUp .3s ease forwards; }
+
+    /* ── Search glow ─────────────────────────── */
+    #search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #F97316;
+    }
+
+    /* ── Category section header ─────────────── */
+    .section-divider {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 18px;
+    }
+    .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: #374151;
+    }
+
+    /* ── Qty controls ────────────────────────── */
+    .qty-btn {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-weight: 800; font-size: 16px;
+      transition: background .15s;
+    }
+    .qty-btn:hover { background: rgba(249,115,22,.35); }
+
+    /* ── Shimmer on images ───────────────────── */
+    .img-wrap { position: relative; overflow: hidden; background: #374151; }
+    .img-wrap img { transition: opacity .4s, transform .35s; }
+    .img-wrap img.loaded { opacity: 1; }
+    .img-wrap img:not(.loaded) { opacity: 0; }
+    .menu-card:hover .img-wrap img { transform: scale(1.06); }
+
+    /* ── Veg / Non badge ─────────────────────── */
+    .veg-badge {
+      width: 16px; height: 16px; border-radius: 3px;
+      border: 1.5px solid; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .veg-badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     STICKY HEADER
+═══════════════════════════════════════════ -->
+<header class="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+    <!-- Logo / Name -->
+    <div class="flex-shrink-0">
+      <div class="font-display text-3xl leading-none text-brand-orange">Happy Club</div>
+      <div class="font-display text-lg leading-none text-brand-yellow tracking-widest -mt-1">Café</div>
+    </div>
+
+    <!-- Search -->
+    <div class="flex-1 relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted text-sm"></i>
+      <input id="search-input" type="text" placeholder="Search items…"
+        class="w-full bg-brand-card border border-brand-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-brand-muted transition" />
+    </div>
+
+    <!-- Cart icon (mobile) -->
+    <button onclick="scrollToCart()" class="relative flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-brand-card border border-brand-border">
+      <i class="fa-solid fa-bag-shopping text-brand-orange"></i>
+      <span id="header-badge" class="hidden absolute -top-1.5 -right-1.5 bg-brand-orange text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center">0</span>
+    </button>
+  </div>
+
+  <!-- Category pills -->
+  <div id="pills-container" class="pill-scroll flex gap-2 overflow-x-auto px-4 pb-3"></div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════
+     HERO STRIP
+═══════════════════════════════════════════ -->
+<div class="bg-gradient-to-r from-brand-orange/20 via-brand-yellow/10 to-transparent border-b border-brand-border">
+  <div class="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-brand-orange/20 flex items-center justify-center flex-shrink-0">
+      <i class="fa-solid fa-utensils text-brand-orange text-xl"></i>
+    </div>
+    <div>
+      <p class="text-xs text-brand-muted">Near Bus Stand, Bagri Road, Sojat Road – 306103</p>
+      <div class="flex gap-3 mt-1">
+        <a href="tel:7976272852" class="text-xs text-brand-yellow font-bold"><i class="fa-solid fa-phone mr-1"></i>7976272852</a>
+        <a href="tel:9602500462" class="text-xs text-brand-yellow font-bold"><i class="fa-solid fa-phone mr-1"></i>9602500462</a>
+      </div>
+    </div>
+    <div class="ml-auto flex-shrink-0">
+      <span class="text-[11px] bg-green-500/20 text-green-400 border border-green-500/30 rounded-full px-3 py-1 font-bold">
+        <i class="fa-solid fa-circle text-[7px] mr-1"></i>Home Delivery
+      </span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     MENU SECTIONS
+═══════════════════════════════════════════ -->
+<main id="menu-root" class="max-w-5xl mx-auto px-4 pt-6 space-y-10"></main>
+
+
+<!-- ═══════════════════════════════════════════
+     STICKY CART BAR
+═══════════════════════════════════════════ -->
+<div id="cart-bar"
+  class="fixed bottom-0 left-0 right-0 z-50 hidden"
+  style="filter: drop-shadow(0 -4px 24px rgba(249,115,22,.35))">
+  <div class="max-w-5xl mx-auto px-3 pb-3">
+    <div class="bg-brand-orange rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-white font-black text-lg leading-none" id="cart-summary">0 Items</p>
+        <p class="text-orange-100 text-sm font-bold mt-0.5" id="cart-total">₹0</p>
+      </div>
+      <button id="checkout-btn"
+        class="bg-white text-brand-orange font-black text-sm rounded-xl px-5 py-3 flex items-center gap-2 hover:bg-orange-50 transition active:scale-95">
+        <i class="fa-brands fa-whatsapp text-green-500 text-lg"></i>
+        Checkout on WhatsApp
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+/* ╔══════════════════════════════════════════╗
+   ║           MENU DATA                      ║
+   ╚══════════════════════════════════════════╝ */
+const WHATSAPP_NUMBER = '917976272852'; // update if needed
+
+const MENU = [
+  {
+    category: 'Burger',
+    icon: 'fa-burger',
+    imgKeyword: 'burger',
+    items: [
+      { name: 'Vegetable Burger',        price: 60  },
+      { name: 'Veg. Tikki Burger',       price: 80  },
+      { name: 'Db. Cheeze Tikki Burger', price: 90  },
+    ]
+  },
+  {
+    category: 'Breads',
+    icon: 'fa-bread-slice',
+    imgKeyword: 'bread sandwich',
+    items: [
+      { name: 'Cheeze Slice',       price: 40  },
+      { name: 'Cheese Bun',         price: 60  },
+      { name: 'Cheese Garlic Bread',price: 100 },
+    ]
+  },
+  {
+    category: 'Chinese / Italian',
+    icon: 'fa-bowl-food',
+    imgKeyword: 'noodles maggi',
+    items: [
+      { name: 'Plain Maggi',              price: 40  },
+      { name: 'Vegetable Masala Maggi',   price: 60  },
+      { name: 'Sheizwan Maggi',           price: 80  },
+      { name: 'Cheeze Vegetable Maggi',   price: 90  },
+      { name: 'Paneer Maggi',             price: 110 },
+      { name: 'Chaumin',                  price: 60  },
+      { name: 'Cheeze Chaumin',           price: 80  },
+      { name: 'Monchurian Dry',           price: 90  },
+      { name: 'Manchurian Gravy',         price: 100 },
+      { name: 'Cheeze Manchurian Gravy',  price: 110 },
+      { name: 'Red Sauce Pasta',          price: 80  },
+      { name: 'White Sauce Pasta',        price: 100 },
+    ]
+  },
+  {
+    category: 'Fried',
+    icon: 'fa-fire-flame-curved',
+    imgKeyword: 'fried snacks pakoda',
+    items: [
+      { name: 'Veg Pakoda',    price: 60  },
+      { name: 'French Fries',  price: 80  },
+      { name: 'Cheese Ball',   price: 100 },
+      { name: 'Paneer Pakoda', price: 150 },
+    ]
+  },
+  {
+    category: 'Special from Happy Club Kitchen',
+    icon: 'fa-star',
+    imgKeyword: 'cheese snack food',
+    items: [
+      { name: 'Cheese Khichiya',   price: 70  },
+      { name: 'Cheese Bhel',       price: 70  },
+      { name: 'Cheese Nachoz',     price: 100 },
+      { name: 'Paneer Chilli',     price: 150 },
+      { name: 'Honey Chilli Potato', price: 150 },
+    ]
+  },
+  {
+    category: 'Special Chai',
+    icon: 'fa-mug-hot',
+    imgKeyword: 'masala chai tea',
+    items: [
+      { name: 'Tandoori Chai', price: 40 },
+      { name: 'Kesar Chai',    price: 40 },
+      { name: 'Hot Coffee',    price: 50 },
+    ]
+  },
+  {
+    category: 'Icecream Scoops',
+    icon: 'fa-ice-cream',
+    imgKeyword: 'ice cream scoop',
+    items: [
+      { name: 'Icecream Scoop (Single)',  price: 30 },
+      { name: 'Icecream Scoop (Double)',  price: 40 },
+      { name: 'Icecream Scoop (Triple)',  price: 50 },
+    ]
+  },
+  {
+    category: 'Pizza',
+    icon: 'fa-pizza-slice',
+    imgKeyword: 'pizza',
+    items: [
+      { name: 'Only Cheeze Pizza',         price: 100 },
+      { name: 'Veg. Pizza',                price: 120 },
+      { name: 'Onion Capsicum (OC) Pizza', price: 120 },
+      { name: 'Sweet Corn Pizza',          price: 150 },
+      { name: 'Maggi Pizza',               price: 170 },
+      { name: 'Paneer Pizza',              price: 180 },
+      { name: 'Paneer OTC Pizza',          price: 200 },
+    ]
+  },
+  {
+    category: 'Sandwich (Jumbo Bread)',
+    icon: 'fa-sandwich',
+    imgKeyword: 'sandwich',
+    items: [
+      { name: 'Curd Chilli Sandwich',          price: 30  },
+      { name: 'Cold Sandwich',                 price: 30  },
+      { name: 'Aaloo Cheeze Sandwich',         price: 60  },
+      { name: 'Vegetable Grilled Sandwich',    price: 80  },
+      { name: 'Db. Cheeze Veg Grilled Sandwich', price: 90 },
+      { name: 'Paneer Sandwich',               price: 120 },
+    ]
+  },
+  {
+    category: 'Shakes & Beverages',
+    icon: 'fa-blender',
+    imgKeyword: 'milkshake smoothie',
+    items: [
+      { name: 'Cold Coffee',      price: 50  },
+      { name: 'Pineapple Shake',  price: 60  },
+      { name: 'Strawberry Shake', price: 60  },
+      { name: 'Mango Shake',      price: 60  },
+      { name: 'Oreo Shake',       price: 90  },
+      { name: 'Kitkat Shake',     price: 100 },
+      { name: 'Chocolate Shake',  price: 100 },
+    ]
+  },
+];
+
+/* ╔══════════════════════════════════════════╗
+   ║           CART STATE                     ║
+   ╚══════════════════════════════════════════╝ */
+// cart = { itemId: { name, price, qty } }
+const cart = {};
+
+function itemId(catIdx, itemIdx) {
+  return `${catIdx}-${itemIdx}`;
+}
+
+function addToCart(id, name, price) {
+  if (cart[id]) {
+    cart[id].qty++;
+  } else {
+    cart[id] = { name, price, qty: 1 };
+  }
+  renderCartBar();
+  updateCardQty(id);
+}
+
+function removeFromCart(id) {
+  if (!cart[id]) return;
+  cart[id].qty--;
+  if (cart[id].qty <= 0) delete cart[id];
+  renderCartBar();
+  updateCardQty(id);
+}
+
+function totalItems() {
+  return Object.values(cart).reduce((s, v) => s + v.qty, 0);
+}
+function totalPrice() {
+  return Object.values(cart).reduce((s, v) => s + v.qty * v.price, 0);
+}
+
+/* ── Update qty display inside a card ──── */
+function updateCardQty(id) {
+  const wrap  = document.getElementById(`qty-wrap-${id}`);
+  const addBtn= document.getElementById(`add-btn-${id}`);
+  if (!wrap || !addBtn) return;
+
+  const qty = cart[id]?.qty || 0;
+  if (qty > 0) {
+    wrap.classList.remove('hidden');
+    addBtn.classList.add('hidden');
+    wrap.querySelector('.qty-val').textContent = qty;
+  } else {
+    wrap.classList.add('hidden');
+    addBtn.classList.remove('hidden');
+  }
+}
+
+/* ── Render sticky cart bar ─────────────── */
+function renderCartBar() {
+  const bar     = document.getElementById('cart-bar');
+  const summary = document.getElementById('cart-summary');
+  const total   = document.getElementById('cart-total');
+  const badge   = document.getElementById('header-badge');
+  const n = totalItems(), p = totalPrice();
+
+  if (n > 0) {
+    bar.classList.remove('hidden');
+    bar.classList.add('visible');
+    summary.textContent = `${n} Item${n > 1 ? 's' : ''}`;
+    total.textContent   = `₹${p}`;
+    badge.textContent   = n;
+    badge.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+    badge.classList.add('hidden');
+  }
+}
+
+/* ╔══════════════════════════════════════════╗
+   ║           WHATSAPP CHECKOUT              ║
+   ╚══════════════════════════════════════════╝ */
+document.getElementById('checkout-btn').addEventListener('click', () => {
+  if (totalItems() === 0) return;
+
+  let msg = `Order for *Happy Club Café* 🍕%0A`;
+  msg += `————————————————%0A`;
+  Object.values(cart).forEach(({ name, qty, price }) => {
+    msg += `${qty}x ${name} – ₹${qty * price}%0A`;
+  });
+  msg += `————————————————%0A`;
+  msg += `*Total: ₹${totalPrice()}*%0A%0A`;
+  msg += `📍 Near Bus Stand, Bagri Road, Sojat Road – 306103`;
+
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+});
+
+/* ╔══════════════════════════════════════════╗
+   ║           RENDER MENU                    ║
+   ╚══════════════════════════════════════════╝ */
+
+/* Unsplash source URL per category */
+function imgUrl(keyword, seed) {
+  // Using picsum as fallback with deterministic seed + overlay text
+  return `https://source.unsplash.com/400x280/?${encodeURIComponent(keyword)}&sig=${seed}`;
+}
+
+/* Build category pill */
+function buildPills() {
+  const container = document.getElementById('pills-container');
+  MENU.forEach((cat, idx) => {
+    const btn = document.createElement('button');
+    btn.className = `
+      flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold border transition
+      ${idx === 0
+        ? 'bg-brand-orange text-white border-brand-orange'
+        : 'bg-transparent text-brand-muted border-brand-border hover:border-brand-orange hover:text-brand-orange'}
+    `.trim().replace(/\s+/g, ' ');
+    btn.textContent = cat.category;
+    btn.dataset.catIdx = idx;
+    btn.addEventListener('click', () => {
+      document.getElementById(`section-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // active style
+      container.querySelectorAll('button').forEach(b => {
+        b.className = b.className
+          .replace('bg-brand-orange text-white border-brand-orange', '')
+          .replace('bg-transparent text-brand-muted border-brand-border', '')
+          + ' bg-transparent text-brand-muted border-brand-border hover:border-brand-orange hover:text-brand-orange';
+      });
+      btn.className = btn.className
+        .replace('bg-transparent text-brand-muted border-brand-border', '')
+        + ' bg-brand-orange text-white border-brand-orange';
+    });
+    container.appendChild(btn);
+  });
+}
+
+/* Build single item card */
+function buildCard(catIdx, itemIdx, item, imgKeyword) {
+  const id   = itemId(catIdx, itemIdx);
+  const seed = catIdx * 100 + itemIdx;
+  const img  = imgUrl(imgKeyword, seed);
+
+  const card = document.createElement('div');
+  card.className = 'menu-card bg-brand-card border border-brand-border rounded-2xl overflow-hidden flex flex-col';
+  card.dataset.name = item.name.toLowerCase();
+
+  card.innerHTML = `
+    <!-- Image -->
+    <div class="img-wrap w-full" style="height:160px">
+      <img src="${img}" alt="${item.name}"
+        class="w-full h-full object-cover"
+        onload="this.classList.add('loaded')"
+        onerror="this.src='https://placehold.co/400x280/1F2937/F97316?text=${encodeURIComponent(item.name.split(' ')[0])}';this.classList.add('loaded')" />
+    </div>
+
+    <!-- Body -->
+    <div class="p-3 flex flex-col flex-1">
+      <!-- Veg badge + name -->
+      <div class="flex items-start gap-2 mb-2">
+        <span class="veg-badge border-green-500 mt-0.5 flex-shrink-0">
+          <span class="dot bg-green-500"></span>
+        </span>
+        <p class="text-sm font-bold text-white leading-tight">${item.name}</p>
+      </div>
+
+      <!-- Price + Add -->
+      <div class="flex items-center justify-between mt-auto pt-2 border-t border-brand-border">
+        <span class="text-brand-orange font-black text-base">₹${item.price}</span>
+
+        <!-- ADD button -->
+        <button id="add-btn-${id}"
+          onclick="handleAdd('${id}','${item.name.replace(/'/g,"\\'")}',${item.price}, this)"
+          class="bg-brand-orange hover:bg-orange-500 active:scale-90 transition text-white text-xs font-black rounded-xl px-4 py-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-plus text-[10px]"></i> ADD
+        </button>
+
+        <!-- QTY controls (hidden initially) -->
+        <div id="qty-wrap-${id}" class="hidden flex items-center gap-1 bg-brand-orange rounded-xl px-2 py-1.5">
+          <button class="qty-btn text-white" onclick="handleRemove('${id}')">
+            <i class="fa-solid fa-minus text-[10px]"></i>
+          </button>
+          <span class="qty-val text-white font-black text-sm w-5 text-center">0</span>
+          <button class="qty-btn text-white" onclick="handleAdd('${id}','${item.name.replace(/'/g,"\\'")}',${item.price})">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+/* Pop animation helper */
+function handleAdd(id, name, price, btn) {
+  addToCart(id, name, price);
+  if (btn) { btn.classList.add('btn-pop'); btn.addEventListener('animationend', () => btn.classList.remove('btn-pop'), { once: true }); }
+}
+function handleRemove(id) { removeFromCart(id); }
+
+/* Build entire menu */
+function buildMenu() {
+  const root = document.getElementById('menu-root');
+
+  MENU.forEach((cat, catIdx) => {
+    const section = document.createElement('section');
+    section.id = `section-${catIdx}`;
+
+    // Section heading
+    const heading = document.createElement('div');
+    heading.className = 'section-divider';
+    heading.innerHTML = `
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <span class="w-9 h-9 rounded-xl bg-brand-orange/20 flex items-center justify-center">
+          <i class="fa-solid ${cat.icon} text-brand-orange text-base"></i>
+        </span>
+        <h2 class="font-display text-2xl text-white tracking-wide">${cat.category}</h2>
+      </div>
+    `;
+    section.appendChild(heading);
+
+    // Grid
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 md:grid-cols-3 gap-3';
+
+    cat.items.forEach((item, itemIdx) => {
+      grid.appendChild(buildCard(catIdx, itemIdx, item, cat.imgKeyword));
+    });
+
+    section.appendChild(grid);
+    root.appendChild(section);
+  });
+}
+
+/* ╔══════════════════════════════════════════╗
+   ║           SEARCH                         ║
+   ╚══════════════════════════════════════════╝ */
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.menu-card').forEach(card => {
+    const match = !q || card.dataset.name.includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+  // Hide empty sections
+  document.querySelectorAll('section[id^="section-"]').forEach(sec => {
+    const visible = [...sec.querySelectorAll('.menu-card')].some(c => c.style.display !== 'none');
+    sec.style.display = visible ? '' : 'none';
+  });
+});
+
+/* ╔══════════════════════════════════════════╗
+   ║           SCROLL SPY (pills)             ║
+   ╚══════════════════════════════════════════╝ */
+function initScrollSpy() {
+  const sections = MENU.map((_, i) => document.getElementById(`section-${i}`));
+  const pills    = document.querySelectorAll('#pills-container button');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = parseInt(entry.target.id.replace('section-', ''));
+        pills.forEach((p, pi) => {
+          const active = pi === idx;
+          p.classList.toggle('bg-brand-orange', active);
+          p.classList.toggle('text-white', active);
+          p.classList.toggle('border-brand-orange', active);
+          p.classList.toggle('text-brand-muted', !active);
+          p.classList.toggle('border-brand-border', !active);
+          if (active) p.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => s && observer.observe(s));
+}
+
+function scrollToCart() {
+  document.getElementById('cart-bar').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ╔══════════════════════════════════════════╗
+   ║           INIT                           ║
+   ╚══════════════════════════════════════════╝ */
+buildPills();
+buildMenu();
+initScrollSpy();
+</script>
+</body>
+</html>
