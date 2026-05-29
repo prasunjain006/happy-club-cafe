@@ -34,6 +34,7 @@
   <style>
     /* ── Global ──────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; }
+    /* Scroll smooth hataya gaya hai CSS se taaki lag na ho */
     body {
       font-family: 'Nunito', sans-serif;
       background-color: #111827;
@@ -122,7 +123,6 @@
   <div id="pills-container" class="pill-scroll flex gap-2 overflow-x-auto px-4 pb-3"></div>
 </header>
 
-
 <div class="bg-gradient-to-r from-brand-orange/20 via-brand-yellow/10 to-transparent border-b border-brand-border">
   <div class="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
     <div class="w-12 h-12 rounded-full bg-brand-orange/20 flex items-center justify-center flex-shrink-0">
@@ -143,9 +143,7 @@
   </div>
 </div>
 
-
 <main id="menu-root" class="max-w-5xl mx-auto px-4 pt-6 space-y-10"></main>
-
 
 <div id="cart-bar" class="fixed bottom-0 left-0 right-0 z-40 hidden" style="filter: drop-shadow(0 -4px 24px rgba(249,115,22,.35))">
   <div class="max-w-5xl mx-auto px-3 pb-3">
@@ -188,115 +186,114 @@
   </div>
 </div>
 
-
 <script>
 /* ╔══════════════════════════════════════════╗
    ║            MENU DATA                     ║
    ╚══════════════════════════════════════════╝ */
-const WHATSAPP_NUMBER = '917976272852'; // update if needed
+const WHATSAPP_NUMBER = '917976272852';
 
 const MENU = [
   {
-    category: 'Burger', icon: 'fa-burger', imgKeyword: 'burger',
+    category: 'Burger', icon: 'fa-burger',
     items: [
-      { name: 'Vegetable Burger', price: 60 },
-      { name: 'Veg. Tikki Burger', price: 80 },
-      { name: 'Db. Cheeze Tikki Burger', price: 90 },
+      { name: 'Vegetable Burger', price: 60, image: '' },
+      { name: 'Veg. Tikki Burger', price: 80, image: '' },
+      { name: 'Db. Cheeze Tikki Burger', price: 90, image: '' },
     ]
   },
   {
-    category: 'Breads', icon: 'fa-bread-slice', imgKeyword: 'bread sandwich',
+    category: 'Breads', icon: 'fa-bread-slice',
     items: [
-      { name: 'Cheeze Slice', price: 40 },
-      { name: 'Cheese Bun', price: 60 },
-      { name: 'Cheese Garlic Bread', price: 100 },
+      { name: 'Cheeze Slice', price: 40, image: '' },
+      { name: 'Cheese Bun', price: 60, image: '' },
+      { name: 'Cheese Garlic Bread', price: 100, image: '' },
     ]
   },
   {
-    category: 'Chinese / Italian', icon: 'fa-bowl-food', imgKeyword: 'noodles maggi',
+    category: 'Chinese / Italian', icon: 'fa-bowl-food',
     items: [
-      { name: 'Plain Maggi', price: 40 },
-      { name: 'Vegetable Masala Maggi', price: 60 },
-      { name: 'Sheizwan Maggi', price: 80 },
-      { name: 'Cheeze Vegetable Maggi', price: 90 },
-      { name: 'Paneer Maggi', price: 110 },
-      { name: 'Chaumin', price: 60 },
-      { name: 'Cheeze Chaumin', price: 80 },
-      { name: 'Monchurian Dry', price: 90 },
-      { name: 'Manchurian Gravy', price: 100 },
-      { name: 'Cheeze Manchurian Gravy', price: 110 },
-      { name: 'Red Sauce Pasta', price: 80 },
-      { name: 'White Sauce Pasta', price: 100 },
+      { name: 'Plain Maggi', price: 40, image: '' },
+      { name: 'Vegetable Masala Maggi', price: 60, image: '' },
+      { name: 'Sheizwan Maggi', price: 80, image: '' },
+      { name: 'Cheeze Vegetable Maggi', price: 90, image: '' },
+      { name: 'Paneer Maggi', price: 110, image: '' },
+      { name: 'Chaumin', price: 60, image: '' },
+      { name: 'Cheeze Chaumin', price: 80, image: '' },
+      { name: 'Monchurian Dry', price: 90, image: '' },
+      { name: 'Manchurian Gravy', price: 100, image: '' },
+      { name: 'Cheeze Manchurian Gravy', price: 110, image: '' },
+      { name: 'Red Sauce Pasta', price: 80, image: '' },
+      { name: 'White Sauce Pasta', price: 100, image: '' },
     ]
   },
   {
-    category: 'Fried', icon: 'fa-fire-flame-curved', imgKeyword: 'fried snacks pakoda',
+    category: 'Fried', icon: 'fa-fire-flame-curved',
     items: [
-      { name: 'Veg Pakoda', price: 60 },
-      { name: 'French Fries', price: 80 },
-      { name: 'Cheese Ball', price: 100 },
-      { name: 'Paneer Pakoda', price: 150 },
+      { name: 'Veg Pakoda', price: 60, image: '' },
+      { name: 'French Fries', price: 80, image: '' },
+      { name: 'Cheese Ball', price: 100, image: '' },
+      { name: 'Paneer Pakoda', price: 150, image: '' },
     ]
   },
   {
-    category: 'Special from Happy Club Kitchen', icon: 'fa-star', imgKeyword: 'cheese snack food',
+    category: 'Special from Happy Club Kitchen', icon: 'fa-star',
     items: [
-      { name: 'Cheese Khichiya', price: 70 },
-      { name: 'Cheese Bhel', price: 70 },
-      { name: 'Cheese Nachoz', price: 100 },
-      { name: 'Paneer Chilli', price: 150 },
-      { name: 'Honey Chilli Potato', price: 150 },
+      { name: 'Cheese Khichiya', price: 70, image: '' },
+      { name: 'Cheese Bhel', price: 70, image: '' },
+      { name: 'Cheese Nachoz', price: 100, image: '' },
+      { name: 'Paneer Chilli', price: 150, image: '' },
+      { name: 'Honey Chilli Potato', price: 150, image: '' },
     ]
   },
   {
-    category: 'Special Chai', icon: 'fa-mug-hot', imgKeyword: 'masala chai tea',
+    category: 'Special Chai', icon: 'fa-mug-hot',
     items: [
-      { name: 'Tandoori Chai', price: 40 },
-      { name: 'Kesar Chai', price: 40 },
-      { name: 'Hot Coffee', price: 50 },
+      { name: 'Tandoori Chai', price: 40, image: '' },
+      { name: 'Kesar Chai', price: 40, image: '' },
+      { name: 'Hot Coffee', price: 50, image: '' },
     ]
   },
   {
-    category: 'Icecream Scoops', icon: 'fa-ice-cream', imgKeyword: 'ice cream scoop',
+    category: 'Icecream Scoops', icon: 'fa-ice-cream',
     items: [
-      { name: 'Icecream Scoop (Single)', price: 30 },
-      { name: 'Icecream Scoop (Double)', price: 40 },
-      { name: 'Icecream Scoop (Triple)', price: 50 },
+      { name: 'Icecream Scoop (Single)', price: 30, image: '' },
+      { name: 'Icecream Scoop (Double)', price: 40, image: '' },
+      { name: 'Icecream Scoop (Triple)', price: 50, image: '' },
     ]
   },
   {
-    category: 'Pizza', icon: 'fa-pizza-slice', imgKeyword: 'pizza',
+    category: 'Pizza', icon: 'fa-pizza-slice',
     items: [
-      { name: 'Only Cheeze Pizza', price: 100 },
-      { name: 'Veg. Pizza', price: 120 },
-      { name: 'Onion Capsicum (OC) Pizza', price: 120 },
-      { name: 'Sweet Corn Pizza', price: 150 },
-      { name: 'Maggi Pizza', price: 170 },
-      { name: 'Paneer Pizza', price: 180 },
-      { name: 'Paneer OTC Pizza', price: 200 },
+      { name: 'Only Cheeze Pizza', price: 100, image: '' },
+      { name: 'Veg. Pizza', price: 120, image: '' },
+      { name: 'Onion Capsicum (OC) Pizza', price: 120, image: '' },
+      { name: 'Sweet Corn Pizza', price: 150, image: '' },
+      { name: 'Maggi Pizza', price: 170, image: '' },
+      { name: 'Paneer Pizza', price: 180, image: '' },
+      { name: 'Paneer OTC Pizza', price: 200, image: '' },
     ]
   },
   {
-    category: 'Sandwich (Jumbo Bread)', icon: 'fa-sandwich', imgKeyword: 'sandwich',
+    category: 'Sandwich (Jumbo Bread)', icon: 'fa-sandwich',
     items: [
-      { name: 'Curd Chilli Sandwich', price: 30 },
-      { name: 'Cold Sandwich', price: 30 },
-      { name: 'Aaloo Cheeze Sandwich', price: 60 },
-      { name: 'Vegetable Grilled Sandwich', price: 80 },
-      { name: 'Db. Cheeze Veg Grilled Sandwich', price: 90 },
-      { name: 'Paneer Sandwich', price: 120 },
+      { name: 'Curd Chilli Sandwich', price: 30, image: '' },
+      { name: 'Cold Sandwich', price: 30, image: '' },
+      { name: 'Aaloo Cheeze Sandwich', price: 60, image: '' },
+      { name: 'Vegetable Grilled Sandwich', price: 80, image: '' },
+      { name: 'Db. Cheeze Veg Grilled Sandwich', price: 90, image: '' },
+      { name: 'Paneer Sandwich', price: 120, image: '' },
     ]
   },
   {
-    category: 'Shakes & Beverages', icon: 'fa-blender', imgKeyword: 'milkshake smoothie',
+    category: 'Shakes & Beverages', icon: 'fa-blender',
     items: [
-      { name: 'Cold Coffee', price: 50 },
-      { name: 'Pineapple Shake', price: 60 },
-      { name: 'Strawberry Shake', price: 60 },
-      { name: 'Mango Shake', price: 60 },
-      { name: 'Oreo Shake', price: 90 },
-      { name: 'Kitkat Shake', price: 100 },
-      { name: 'Chocolate Shake', price: 100 },
+      { name: 'Cold Coffee', price: 50, image: '' },
+      { name: 'Pineapple Shake', price: 60, image: '' },
+      { name: 'Strawberry Shake', price: 60, image: '' },
+      { name: 'Mango Shake', price: 60, image: '' },
+      { name: 'Oreo Shake', price: 90, image: '' },
+      { name: 'Kitkat Shake', price: 100, image: '' },
+      { name: 'Chocolate Shake', price: 100, image: '' },
     ]
   },
 ];
@@ -361,29 +358,24 @@ function renderCartBar() {
 /* ╔══════════════════════════════════════════╗
    ║            MODAL & WHATSAPP CHECKOUT     ║
    ╚══════════════════════════════════════════╝ */
-// 1. Open Modal when Checkout is clicked
 document.getElementById('checkout-btn').addEventListener('click', () => {
   if (totalItems() === 0) return;
   document.getElementById('checkout-modal').classList.remove('hidden');
 });
 
-// 2. Close Modal function
 function closeModal() {
   document.getElementById('checkout-modal').classList.add('hidden');
 }
 
-// 3. Confirm Order and Send to WhatsApp
 function confirmOrder() {
   const nameInput = document.getElementById('cust-name').value.trim();
   const addressInput = document.getElementById('cust-address').value.trim();
 
-  // Validation: Check if inputs are empty
   if (!nameInput || !addressInput) {
     alert("Please enter both your Name and Delivery Address to place the order.");
     return;
   }
 
-  // Formatting the WhatsApp Message
   let msg = `Order for *Happy Club Café* 🍕%0A`;
   msg += `————————————————%0A`;
   msg += `👤 *Name:* ${nameInput}%0A`;
@@ -397,10 +389,8 @@ function confirmOrder() {
   msg += `————————————————%0A`;
   msg += `*Grand Total: ₹${totalPrice()}*%0A`;
 
-  // Open WhatsApp
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
 
-  // Reset Cart and Form after order
   closeModal();
   Object.keys(cart).forEach(id => delete cart[id]);
   renderCartBar();
@@ -413,10 +403,6 @@ function confirmOrder() {
 /* ╔══════════════════════════════════════════╗
    ║            RENDER MENU                   ║
    ╚══════════════════════════════════════════╝ */
-function imgUrl(keyword, seed) {
-  return `https://source.unsplash.com/400x280/?${encodeURIComponent(keyword)}&sig=${seed}`;
-}
-
 function buildPills() {
   const container = document.getElementById('pills-container');
   MENU.forEach((cat, idx) => {
@@ -424,6 +410,8 @@ function buildPills() {
     btn.className = `flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold border transition ${idx === 0 ? 'bg-brand-orange text-white border-brand-orange' : 'bg-transparent text-brand-muted border-brand-border hover:border-brand-orange hover:text-brand-orange'}`.trim().replace(/\s+/g, ' ');
     btn.textContent = cat.category;
     btn.dataset.catIdx = idx;
+    
+    // Naya logic button click ke liye (Smooth scroll bina lag ke)
     btn.addEventListener('click', () => {
       document.getElementById(`section-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       container.querySelectorAll('button').forEach(b => {
@@ -435,10 +423,11 @@ function buildPills() {
   });
 }
 
-function buildCard(catIdx, itemIdx, item, imgKeyword) {
+function buildCard(catIdx, itemIdx, item) {
   const id   = itemId(catIdx, itemIdx);
-  const seed = catIdx * 100 + itemIdx;
-  const img  = imgUrl(imgKeyword, seed);
+  
+  // IMAGE LOGIC: Agar image daali hai JSON mein toh wo warna naam ka placeholder
+  const imgPath = item.image ? item.image : `https://placehold.co/400x280/1F2937/F97316?text=${encodeURIComponent(item.name)}`;
 
   const card = document.createElement('div');
   card.className = 'menu-card bg-brand-card border border-brand-border rounded-2xl overflow-hidden flex flex-col';
@@ -446,7 +435,7 @@ function buildCard(catIdx, itemIdx, item, imgKeyword) {
 
   card.innerHTML = `
     <div class="img-wrap w-full" style="height:160px">
-      <img src="${img}" alt="${item.name}" class="w-full h-full object-cover" onload="this.classList.add('loaded')" onerror="this.src='https://placehold.co/400x280/1F2937/F97316?text=${encodeURIComponent(item.name.split(' ')[0])}';this.classList.add('loaded')" />
+      <img src="${imgPath}" alt="${item.name}" class="w-full h-full object-cover" onload="this.classList.add('loaded')" onerror="this.src='https://placehold.co/400x280/1F2937/F97316?text=Happy+Club';this.classList.add('loaded')" />
     </div>
     <div class="p-3 flex flex-col flex-1">
       <div class="flex items-start gap-2 mb-2">
@@ -494,7 +483,7 @@ function buildMenu() {
 
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-2 md:grid-cols-3 gap-3';
-    cat.items.forEach((item, itemIdx) => { grid.appendChild(buildCard(catIdx, itemIdx, item, cat.imgKeyword)); });
+    cat.items.forEach((item, itemIdx) => { grid.appendChild(buildCard(catIdx, itemIdx, item)); });
     
     section.appendChild(grid);
     root.appendChild(section);
@@ -502,7 +491,7 @@ function buildMenu() {
 }
 
 /* ╔══════════════════════════════════════════╗
-   ║            SEARCH & SPY                  ║
+   ║            SEARCH & SPY (LAG FIX)        ║
    ╚══════════════════════════════════════════╝ */
 document.getElementById('search-input').addEventListener('input', function() {
   const q = this.value.toLowerCase().trim();
@@ -516,6 +505,7 @@ document.getElementById('search-input').addEventListener('input', function() {
   });
 });
 
+// Scrollspy ko hilaane (Lag) ki bimari khatam karne ka logic
 function initScrollSpy() {
   const sections = MENU.map((_, i) => document.getElementById(`section-${i}`));
   const pills    = document.querySelectorAll('#pills-container button');
@@ -527,12 +517,23 @@ function initScrollSpy() {
         const idx = parseInt(entry.target.id.replace('section-', ''));
         pills.forEach((p, pi) => {
           const active = pi === idx;
-          p.classList.toggle('bg-brand-orange', active); p.classList.toggle('text-white', active); p.classList.toggle('border-brand-orange', active); p.classList.toggle('text-brand-muted', !active); p.classList.toggle('border-brand-border', !active);
-          if (active) { container.scrollTo({ left: p.offsetLeft - (container.offsetWidth / 2) + (p.offsetWidth / 2), behavior: 'smooth' }); }
+          p.classList.toggle('bg-brand-orange', active); 
+          p.classList.toggle('text-white', active); 
+          p.classList.toggle('border-brand-orange', active); 
+          p.classList.toggle('text-brand-muted', !active); 
+          p.classList.toggle('border-brand-border', !active);
+          
+          // Sirf horizontal container ko slowly scroll karega
+          if (active) { 
+            container.scrollTo({ 
+              left: p.offsetLeft - (container.offsetWidth / 2) + (p.offsetWidth / 2), 
+              behavior: 'smooth' 
+            }); 
+          }
         });
       }
     });
-  }, { threshold: 0.2, rootMargin: "-150px 0px 0px 0px" });
+  }, { threshold: 0.1, rootMargin: "-120px 0px -60% 0px" });
 
   sections.forEach(s => s && observer.observe(s));
 }
